@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para mi Amada - Girasol con tu Foto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #4EBD44;
+            font-family: 'Poppins', sans-serif;
+            color: #E8DB58;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            margin: 10px 0;
+            color: #FFF275;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            line-height: 1.1;
+        }
+
+        p.subtitle {
+            font-size: clamp(0.95rem, 3.5vw, 1.2rem);
+            margin-bottom: clamp(15px, 4vw, 25px);
+            font-weight: 300;
+            color: #FFF;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            padding: 0 10px;
+        }
+
+        /* Lluvia de flores: canvas a pantalla completa detrás del contenido */
+        #rain-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Botón de sorpresa */
+        .btn-surprise {
+            background-color: #E8DB58;
+            color: #2D6A27;
+            border: none;
+            padding: clamp(12px, 3vw, 14px) clamp(24px, 6vw, 32px);
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-surprise:hover {
+            background-color: #FFF275;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Sección Oculta / Sorpresa Final */
+        #final-surprise {
+            display: none;
+            opacity: 0;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 1.5s forwards;
+            margin-top: 20px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* ============================================================
+           GIRASOL GIGANTE: la foto es el centro y los pétalos giran
+           ============================================================ */
+        .sunflower-photo {
+            position: relative;
+            width: 460px;
+            height: 460px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        /* Canvas donde se dibujan los pétalos girando alrededor de la foto */
+        #petals-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* La foto ocupa el centro del girasol */
+   .photo-frame {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 5px solid #B8860B;
+    box-shadow: 0 0 0 6px #FFD700,
+                0 0 25px rgba(0,0,0,0.35),
+                inset 0 0 30px rgba(0,0,0,0.4);
+    background-color: #fff;
+    z-index: 2;
+    /* Aseguramos que el contenedor sea perfectamente circular */
+    aspect-ratio: 1 / 1;
+}
+
+.photo-frame img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* cover: llena todo el círculo sin deformar */
+    object-fit: cover;
+    /* center: centra la imagen horizontal y verticalmente */
+    /* Puedes ajustar a "center top" para enfocar la cara si es un retrato */
+    object-position: center 10%;
+    display: block;
+    /* Evita que el navegador rote la imagen según su EXIF */
+    image-orientation: from-image;
+}
+
+        .eternal-love {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(1.3rem, 5.5vw, 2.4rem);
+            color: #030303;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+            margin-top: 15px;
+            line-height: 1.3;
+            max-width: 700px;
+            padding: 0 15px;
+        }
+
+        /* ============================================================
+           BOTÓN DE REGRESAR
+           ============================================================ */
+        .btn-regresar {
+            background-color: #E8DB58;
+            color: #2D6A27;
+            border: none;
+            padding: clamp(10px, 2.5vw, 12px) clamp(22px, 5vw, 28px);
+            font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            position: relative;
+            z-index: 10;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn-regresar:hover {
+            background-color: #FFF275;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ============================================================
+           RESPONSIVE PARA CELULARES (mantiene todos los elementos)
+           ============================================================ */
+
+        @media (max-width: 700px) {
+            .sunflower-photo {
+                width: min(88vmin, 420px);
+                height: min(88vmin, 420px);
+                margin-bottom: 15px;
+            }
+
+            .photo-frame {
+                width: 48%;
+                height: 48%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                margin: 5px 0;
+            }
+
+            .sunflower-photo {
+                width: min(84vmin, 360px);
+                height: min(84vmin, 360px);
+                margin-bottom: 12px;
+            }
+
+            .photo-frame {
+                width: 48%;
+                height: 48%;
+                border: 4px solid #B8860B;
+                box-shadow: 0 0 0 5px #FFD700,
+                            0 0 20px rgba(0,0,0,0.35),
+                            inset 0 0 25px rgba(0,0,0,0.4);
+            }
+
+            .eternal-love {
+                padding: 0 10px;
+                margin-top: 10px;
+            }
+
+            .btn-regresar {
+                margin-top: 15px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .sunflower-photo {
+                width: min(80vmin, 300px);
+                height: min(80vmin, 300px);
+                margin-bottom: 10px;
+            }
+
+            .eternal-love {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 340px) {
+            .sunflower-photo {
+                width: min(78vmin, 260px);
+                height: min(78vmin, 260px);
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            p.subtitle {
+                font-size: 0.85rem;
+            }
+
+            .btn-surprise {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+
+            .btn-regresar {
+                padding: 9px 18px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 5px;
+                justify-content: flex-start;
+            }
+
+            h1 {
+                font-size: clamp(1.4rem, 4vh, 2rem);
+                margin: 2px 0;
+            }
+
+            p.subtitle {
+                font-size: 0.85rem;
+                margin-bottom: 6px;
+            }
+
+            .btn-surprise {
+                padding: 8px 20px;
+                font-size: 0.9rem;
+                margin-top: 4px;
+            }
+
+            .sunflower-photo {
+                width: min(70vmin, 280px);
+                height: min(70vmin, 280px);
+                margin-bottom: 6px;
+            }
+
+            .eternal-love {
+                font-size: clamp(1rem, 3.5vh, 1.5rem);
+                margin-top: 5px;
+            }
+
+            .btn-regresar {
+                padding: 8px 18px;
+                font-size: 0.9rem;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas para la lluvia de flores -->
+    <canvas id="rain-canvas"></canvas>
+
+    <div class="container">
+        <!-- Pantalla Inicial -->
+        <div id="main-view">
+            <h1>Flores Amarillas Para Mi Corazoncita</h1>
+            <p class="subtitle">Un jardín creado especialmente para la persona que ilumina mi vida...</p>
+
+            <button class="btn-surprise" onclick="mostrarSorpresa()">Toca aquí mi amor 💛</button>
+        </div>
+
+        <!-- Pantalla Final (Sorpresa) -->
+        <div id="final-surprise">
+            <div class="sunflower-photo">
+                <!-- Canvas con los pétalos girando alrededor de la foto -->
+                <canvas id="petals-canvas"></canvas>
+                <!-- Foto de mi amada como centro del girasol -->
+                <div class="photo-frame">
+                    <img src="received_1138058736793144.jpeg" alt="Mi Amada">
+                </div>
+            </div>
+            <div class="eternal-love">
+                Poco a poco mi amor esto será mejor y más real para mi amada, pero hoy solo quiero decir que te amo como no imaginas,
+                ya quiero que llegue ese momento en que tú y yo estemos uno al lado del otro
+            </div>
+
+            <!-- Botón para regresar a la pantalla inicial -->
+            <button class="btn-regresar" onclick="regresar()">Volver 💛</button>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           1. DIBUJO DEL GIRASOL COMPLETO EN UN CANVAS OFFLINE
+           ============================================================ */
+        function crearGirasolOffscreen(size) {
+            const off = document.createElement('canvas');
+            off.width = size;
+            off.height = size;
+            const ctx = off.getContext('2d');
+            const centerX = size / 2;
+            const centerY = size / 2;
+
+            const escala = size / 200;
+            const numeroPetalos = 30;
+            const largoPetalo = 85 * escala;
+            const anchoPetalo = 24 * escala;
+
+            ctx.fillStyle = '#FFD700';
+            ctx.strokeStyle = '#DAA520';
+            ctx.lineWidth = 1 * escala;
+
+            for (let k = 0; k < numeroPetalos; k++) {
+                const phi = (k * 2 * Math.PI) / numeroPetalos;
+                ctx.beginPath();
+                for (let t = 0; t <= Math.PI; t += 0.05) {
+                    const xPetalo = anchoPetalo * Math.sin(t) * Math.sin(t / 2);
+                    const yPetalo = -largoPetalo * Math.sin(t);
+                    const xFinal = centerX + (xPetalo * Math.cos(phi) - yPetalo * Math.sin(phi));
+                    const yFinal = centerY + (xPetalo * Math.sin(phi) + yPetalo * Math.cos(phi));
+                    if (t === 0) ctx.moveTo(xFinal, yFinal);
+                    else ctx.lineTo(xFinal, yFinal);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            const totalSemillas = 350;
+            const factorEscala = 3.5 * escala;
+            const anguloAureo = 137.508 * (Math.PI / 180);
+
+            for (let n = 1; n <= totalSemillas; n++) {
+                const r = factorEscala * Math.sqrt(n);
+                const theta = n * anguloAureo;
+                const xSemilla = centerX + r * Math.cos(theta);
+                const ySemilla = centerY + r * Math.sin(theta);
+                const radioSemilla = (1.2 + (r * 0.012)) * escala;
+                ctx.beginPath();
+                ctx.arc(xSemilla, ySemilla, radioSemilla, 0, 2 * Math.PI);
+                const colorInversion = Math.floor((n / totalSemillas) * 60);
+                ctx.fillStyle = `rgb(${45 + colorInversion}, ${25 + colorInversion / 2}, 10)`;
+                ctx.fill();
+            }
+
+            return off;
+        }
+
+        /* ============================================================
+           2. DIBUJO DE UN PÉTALO INDIVIDUAL
+           ============================================================ */
+        function crearPetaloOffscreen(w, h) {
+            const off = document.createElement('canvas');
+            off.width = w;
+            off.height = h;
+            const ctx = off.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, h, 0, 0);
+            grad.addColorStop(0, '#FFF275');
+            grad.addColorStop(0.4, '#FFD700');
+            grad.addColorStop(1, '#DAA520');
+
+            ctx.fillStyle = grad;
+            ctx.strokeStyle = '#B8860B';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(w / 2, h);
+            ctx.bezierCurveTo(0, h * 0.75, 0, h * 0.15, w / 2, 0);
+            ctx.bezierCurveTo(w, h * 0.15, w, h * 0.75, w / 2, h);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(184, 134, 11, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(w / 2, h * 0.95);
+            ctx.lineTo(w / 2, h * 0.08);
+            ctx.stroke();
+
+            return off;
+        }
+
+        /* ============================================================
+           3. LLUVIA DE FLORES DE FONDO
+           ============================================================ */
+        const canvas = document.getElementById('rain-canvas');
+        const ctx = canvas.getContext('2d', { alpha: true });
+
+        let W = window.innerWidth;
+        let H = window.innerHeight;
+
+        function resizeCanvas() {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W;
+            canvas.height = H;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Tamaños adaptados al ancho de pantalla
+        function obtenerTamanos() {
+            const ancho = window.innerWidth;
+            if (ancho <= 400) {
+                return [40, 55, 70, 85, 100];
+            } else if (ancho <= 700) {
+                return [55, 75, 95, 115, 135, 155];
+            }
+            return [80, 110, 140, 170, 200, 230, 260];
+        }
+
+        function obtenerNumFlores() {
+            const ancho = window.innerWidth;
+            if (ancho <= 400) return 80;
+            if (ancho <= 700) return 120;
+            return 200;
+        }
+
+        const TAMANOS = obtenerTamanos();
+        const sprites = TAMANOS.map(s => crearGirasolOffscreen(s));
+
+        const NUM_FLORES = obtenerNumFlores();
+        const flores = [];
+
+        function crearFlor(inicial = false) {
+            const spriteIndex = Math.floor(Math.random() * sprites.length);
+            const sprite = sprites[spriteIndex];
+            const size = sprite.width;
+
+            return {
+                sprite,
+                size,
+                x: Math.random() * W,
+                y: inicial ? Math.random() * H : -size - Math.random() * 300,
+                speedY: 0.5 + Math.random() * 1.6,
+                speedX: (Math.random() - 0.5) * 0.7,
+                rotacion: Math.random() * Math.PI * 2,
+                velRotacion: (Math.random() - 0.5) * 0.015,
+                balanceo: Math.random() * Math.PI * 2,
+                velBalanceo: 0.008 + Math.random() * 0.02,
+                amplitudBalanceo: 0.5 + Math.random() * 1.5,
+                opacidad: 0.55 + Math.random() * 0.4
+            };
+        }
+
+        for (let i = 0; i < NUM_FLORES; i++) {
+            flores.push(crearFlor(true));
+        }
+
+        function animar() {
+            ctx.clearRect(0, 0, W, H);
+
+            for (const f of flores) {
+                f.balanceo += f.velBalanceo;
+                f.x += f.speedX + Math.sin(f.balanceo) * f.amplitudBalanceo * 0.5;
+                f.y += f.speedY;
+                f.rotacion += f.velRotacion;
+
+                if (f.y - f.size > H) {
+                    f.y = -f.size - Math.random() * 200;
+                    f.x = Math.random() * W;
+                }
+                if (f.x < -f.size) f.x = W + f.size;
+                if (f.x > W + f.size) f.x = -f.size;
+
+                ctx.save();
+                ctx.globalAlpha = f.opacidad;
+                ctx.translate(f.x, f.y);
+                ctx.rotate(f.rotacion);
+                ctx.drawImage(f.sprite, -f.size / 2, -f.size / 2, f.size, f.size);
+                ctx.restore();
+            }
+
+            requestAnimationFrame(animar);
+        }
+
+        animar();
+
+        /* ============================================================
+           4. PÉTALOS GIRANDO ALREDEDOR DE LA FOTO
+           ============================================================ */
+        const petalsCanvas = document.getElementById('petals-canvas');
+        const pctx = petalsCanvas.getContext('2d');
+        let petalsRunning = false;
+
+        const petaloSprite = crearPetaloOffscreen(80, 150);
+
+        const CAPAS = [
+            { cantidad: 18, largo: 130, ancho: 44, escala: 0.85, offset: 0 },
+            { cantidad: 16, largo: 105, ancho: 38, escala: 0.75, offset: Math.PI / 16 },
+            { cantidad: 14, largo: 80,  ancho: 32, escala: 0.65, offset: Math.PI / 14 }
+        ];
+
+        let anguloGlobal = 0;
+        const VEL_ROTACION_GLOBAL = 0.0035;
+
+        const petalos = [];
+        CAPAS.forEach((capa, capaIdx) => {
+            for (let i = 0; i < capa.cantidad; i++) {
+                const anguloBase = (i / capa.cantidad) * Math.PI * 2 + capa.offset;
+                petalos.push({
+                    anguloBase,
+                    largo: capa.largo,
+                    ancho: capa.ancho,
+                    escala: capa.escala,
+                    variacionAngulo: (Math.random() - 0.5) * 0.12,
+                    variacionLargo: (Math.random() - 0.5) * 12,
+                    pulso: Math.random() * Math.PI * 2,
+                    velPulso: 0.008 + Math.random() * 0.012,
+                    opacidad: capaIdx === 0 ? 0.95 : (capaIdx === 1 ? 0.98 : 1)
+                });
+            }
+        });
+
+        function ajustarCanvasPetalos() {
+            const rect = petalsCanvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            petalsCanvas.width = rect.width * dpr;
+            petalsCanvas.height = rect.height * dpr;
+            pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        let tiempoGlobal = 0;
+
+        function animarPetalos() {
+            if (!petalsRunning) return;
+
+            const w = petalsCanvas.width / (window.devicePixelRatio || 1);
+            const h = petalsCanvas.height / (window.devicePixelRatio || 1);
+            const cx = w / 2;
+            const cy = h / 2;
+
+            pctx.clearRect(0, 0, w, h);
+
+            const escalaTotal = Math.min(w, h) / 460;
+            tiempoGlobal += 0.01;
+
+            anguloGlobal += VEL_ROTACION_GLOBAL;
+
+            const radioCentro = 118 * escalaTotal;
+
+            for (const p of petalos) {
+                p.pulso += p.velPulso;
+                const factorPulso = 1 + Math.sin(p.pulso + tiempoGlobal) * 0.04;
+
+                const angulo = p.anguloBase + p.variacionAngulo + anguloGlobal;
+                const largo = (p.largo + p.variacionLargo) * escalaTotal * factorPulso;
+                const ancho = p.ancho * escalaTotal * p.escala * factorPulso;
+
+                const dirX = Math.cos(angulo);
+                const dirY = Math.sin(angulo);
+
+                const baseX = cx + dirX * (radioCentro - 6);
+                const baseY = cy + dirY * (radioCentro - 6);
+
+                const rotacion = angulo + Math.PI / 2;
+
+                pctx.save();
+                pctx.globalAlpha = p.opacidad;
+                pctx.translate(baseX, baseY);
+                pctx.rotate(rotacion);
+                pctx.drawImage(petaloSprite, -ancho / 2, -largo, ancho, largo);
+                pctx.restore();
+            }
+
+            requestAnimationFrame(animarPetalos);
+        }
+
+        window.addEventListener('resize', () => {
+            if (petalsRunning) ajustarCanvasPetalos();
+        });
+
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                resizeCanvas();
+                if (petalsRunning) ajustarCanvasPetalos();
+            }, 300);
+        });
+
+        /* ============================================================
+           5. TRANSICIÓN A LA SORPRESA FINAL
+           ============================================================ */
+function mostrarSorpresa() {
+    const mainView = document.getElementById('main-view');
+    const finalSurprise = document.getElementById('final-surprise');
+
+    // Resetear la pantalla final por si venimos de un "regresar"
+    // (le devolvemos la animación original de fadeIn)
+    finalSurprise.style.animation = 'fadeIn 1.5s forwards';
+    finalSurprise.style.opacity = '';
+    finalSurprise.style.transition = '';
+
+    // Fade out de la vista principal
+    mainView.style.transition = 'opacity 0.6s ease';
+    mainView.style.opacity = '0';
+
+    setTimeout(() => {
+        mainView.style.display = 'none';
+        finalSurprise.style.display = 'flex';
+
+        setTimeout(() => {
+            ajustarCanvasPetalos();
+            petalsRunning = true;
+            animarPetalos();
+        }, 100);
+    }, 600);
+}
+
+        /* ============================================================
+           6. BOTÓN DE REGRESAR A LA PANTALLA INICIAL
+           ============================================================ */
+     function regresar() {
+    const mainView = document.getElementById('main-view');
+    const finalSurprise = document.getElementById('final-surprise');
+
+    // Fade out de la sorpresa
+    finalSurprise.style.transition = 'opacity 0.6s ease';
+    finalSurprise.style.opacity = '0';
+
+    setTimeout(() => {
+        // Ocultar la sorpresa
+        finalSurprise.style.display = 'none';
+
+        // Detener los pétalos para ahorrar recursos
+        petalsRunning = false;
+
+        // Restaurar la vista principal (sin forzar display, dejamos que vuelva a su estado natural)
+        mainView.style.removeProperty('display');
+        mainView.style.transition = 'opacity 0.6s ease';
+
+        // Forzamos reflow para que la transición del opacity funcione
+        void mainView.offsetWidth;
+        mainView.style.opacity = '1';
+
+        // Limpiamos las propiedades inline después de que termine la transición
+        // para que el estado quede "limpio" y se pueda repetir el ciclo
+        setTimeout(() => {
+            mainView.style.removeProperty('transition');
+            mainView.style.removeProperty('opacity');
+        }, 650);
+    }, 600);
+}
+    </script>
+</body>
+</html>
